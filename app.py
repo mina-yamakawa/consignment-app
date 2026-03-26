@@ -1,18 +1,42 @@
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request, redirect, url_for, session
 import sqlite3
 from datetime import datetime
 
 app = Flask(__name__)
+app.secret_key = "itaku_SecretKey_Consignment2026"
 
 def get_db_connection():
     conn = sqlite3.connect("database/database.db")
     conn.row_factory = sqlite3.Row 
     return conn
 
+@app.route("/login", methods=["GET", "POST"])
+def login():
+
+    if request.method == "POST":
+
+        username = request.form.get("username")
+        password = request.form.get("password")
+
+        if username == "itaku" and password == "itaku2026":
+            session["login"] = True
+            return redirect(url_for("dashboard"))
+
+    return render_template("login.html")
+
+
+@app.route("/logout")
+def logout():
+    session.clear()
+    return redirect(url_for("login"))
+
 
 # ダッシュボード
 @app.route("/")
 def dashboard():
+    if not session.get("login"):
+        return redirect(url_for("login"))
+
     conn = get_db_connection()
 
     month = request.args.get("month")
@@ -114,6 +138,9 @@ def monthly():
 # 委託者一覧
 @app.route("/consignors")
 def consignors():
+    if not session.get("login"):
+        return redirect(url_for("login"))
+    
     conn = get_db_connection()
     consignors = conn.execute("SELECT * FROM consignors").fetchall()
     conn.close()
@@ -215,6 +242,9 @@ def delete_consignor(id):
 # 商品一覧
 @app.route("/products")
 def products():
+    if not session.get("login"):
+        return redirect(url_for("login"))
+    
     conn = get_db_connection()
 
     rows = conn.execute("""
@@ -373,6 +403,9 @@ def delete_product(id):
 # 入荷一覧表示
 @app.route("/stock_entries")
 def stock_entries():
+    if not session.get("login"):
+        return redirect(url_for("login"))
+    
     conn = get_db_connection()
   
     stock_entries = conn.execute("""
@@ -483,6 +516,9 @@ def delete_stock_entry(id):
 # 売上一覧ページ
 @app.route("/sales")
 def sales():
+    if not session.get("login"):
+        return redirect(url_for("login"))
+    
     conn = get_db_connection()
 
     sales = conn.execute("""
@@ -566,7 +602,9 @@ def delete_sale(id):
 # 在庫
 @app.route("/stocks")
 def stocks():
-
+    if not session.get("login"):
+        return redirect(url_for("login"))
+    
     conn = get_db_connection()
 
     stocks = conn.execute("""
@@ -704,4 +742,4 @@ def update_settlement_status():
     return redirect(url_for('settlements', month=month))
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5001, debug=True)
+    app.run(host="0.0.0.0", port=5001)
