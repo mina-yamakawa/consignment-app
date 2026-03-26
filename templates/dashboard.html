@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8 max-w-6xl">
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10 border-b-4 border-slate-100 pb-8">
+        <div>
+            <h2 class="text-4xl font-black text-slate-900 tracking-tight">{{ month }} のサマリー</h2>
+            <p class="text-lg font-bold text-slate-500 mt-2">お店の経営状態を一目で把握できます</p>
+        </div>
+        
+        <form method="get" class="flex items-center gap-3 bg-white p-3 rounded-2xl border-2 border-slate-200 shadow-sm">
+            <input type="month" name="month" value="{{ month }}" class="font-black text-lg p-2 outline-none">
+            <button type="submit" class="px-6 py-2 bg-slate-900 text-white font-black rounded-xl hover:bg-black transition-all">表示</button>
+        </form>
+    </div>
+
+    <div class="bg-yellow-400 rounded-[3rem] p-10 md:p-12 shadow-xl border-4 border-yellow-500 mb-10 relative overflow-hidden">
+        <div class="relative z-10">
+            <p class="text-xl font-black text-yellow-900 mb-2">今月の最終利益（純利益）</p>
+            <h3 class="text-7xl md:text-9xl font-black font-mono tracking-tighter text-slate-900 mb-8">
+                ¥{{ "{:,}".format(final_profit) }}
+            </h3>
+            
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="bg-white/30 p-4 rounded-2xl border border-yellow-600">
+                    <p class="text-xs font-black text-yellow-900 uppercase">委託手数料</p>
+                    <p class="text-xl font-black text-slate-900">¥{{ "{:,}".format(fee_income) }}</p>
+                </div>
+                <div class="bg-white/30 p-4 rounded-2xl border border-yellow-600">
+                    <p class="text-xs font-black text-yellow-900 uppercase">買取利益</p>
+                    <p class="text-xl font-black text-slate-900">¥{{ "{:,}".format(buy_profit) }}</p>
+                </div>
+                <div class="bg-white/30 p-4 rounded-2xl border border-yellow-600">
+                    <p class="text-xs font-black text-yellow-900 uppercase">棚賃収入</p>
+                    <p class="text-xl font-black text-slate-900">¥{{ "{:,}".format(rental_income) }}</p>
+                </div>
+                <div class="bg-white/50 p-4 rounded-2xl border border-rose-400">
+                    <p class="text-xs font-black text-rose-900 uppercase">運営経費</p>
+                    <p class="text-xl font-black text-rose-700">- ¥{{ "{:,}".format(expense) }}</p>
+                </div>
+            </div>
+        </div>
+        <i class="fas fa-coins absolute -bottom-10 -right-10 text-[15rem] text-yellow-500/20 rotate-12"></i>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
+        <div class="bg-white p-6 rounded-3xl border-4 border-indigo-50 flex justify-between items-center shadow-sm">
+            <span class="text-xl font-black text-slate-500">今月の総売上</span>
+            <span class="text-3xl font-black text-indigo-700 font-mono">¥{{ "{:,}".format(total_sales) }}</span>
+        </div>
+        <div class="bg-white p-6 rounded-3xl border-4 border-emerald-50 flex justify-between items-center shadow-sm">
+            <span class="text-xl font-black text-slate-500">本日の売上</span>
+            <span class="text-3xl font-black text-emerald-600 font-mono">¥{{ "{:,}".format(today_total) }}</span>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div class="bg-orange-50 rounded-[2.5rem] border-4 border-orange-200 p-8 shadow-sm">
+            <h3 class="text-2xl font-black text-orange-900 mb-6 flex items-center gap-3">
+                <i class="fas fa-box-open text-orange-600"></i> 在庫僅少 (3個以下)
+            </h3>
+            <div class="space-y-3">
+                {% for s in low_stocks %}
+                <div class="bg-white p-4 rounded-xl flex items-center justify-between border-2 border-orange-100 shadow-sm">
+                    <span class="font-black text-slate-700">{{ s.name }}</span>
+                    <span class="font-black text-orange-600 font-mono">あと {{ s.stock }}</span>
+                </div>
+                {% else %}
+                <p class="text-orange-800 font-bold text-center py-6 italic text-sm">在庫は安定しています</p>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="bg-rose-50 rounded-[2.5rem] border-4 border-rose-200 p-8 shadow-sm">
+            <h3 class="text-2xl font-black text-rose-900 mb-6 flex items-center gap-3">
+                <i class="fas fa-hourglass-half text-rose-600"></i> 期限が近い商品
+            </h3>
+            <div class="space-y-3">
+                {% for e in expiring %}
+                <div class="bg-white p-4 rounded-xl flex items-center justify-between border-2 border-rose-100 shadow-sm">
+                    <span class="font-black text-slate-700">{{ e.name }}</span>
+                    <span class="font-black text-rose-700 font-mono italic">{{ e.expiry_date }}</span>
+                </div>
+                {% else %}
+                <p class="text-rose-800 font-bold text-center py-6 italic text-sm">対象の商品はありません</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
