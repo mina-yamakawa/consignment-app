@@ -34,6 +34,7 @@ def logout():
 # ダッシュボード
 @app.route("/")
 def dashboard():
+
     if not session.get("login"):
         return redirect(url_for("login"))
 
@@ -42,50 +43,110 @@ def dashboard():
     month = request.args.get("month")
     if not month:
         month = datetime.now().strftime("%Y-%m")
+
     today = datetime.now().strftime("%Y-%m-%d")
 
-    res = conn.execute("SELECT SUM(amount) as total FROM sales WHERE strftime('%Y-%m', sale_date) = ?", (month,)).fetchone()
-    total_sales = res["total"] or 0
 
-    res = conn.execute("SELECT SUM(amount) as total FROM sales WHERE sale_date = ?", (today,)).fetchone()
-    today_total = res["total"] or 0
+    res = conn.execute(
+        "SELECT SUM(amount) as total FROM sales WHERE strftime('%Y-%m', sale_date) = ?",
+        (month,)
+    ).fetchone()
+
+    total_sales = int(res["total"]) if res and res["total"] else 0
+
+    res = conn.execute(
+        "SELECT SUM(amount) as total FROM sales WHERE sale_date = ?",
+        (today,)
+    ).fetchone()
+
+    today_total = int(res["total"]) if res and res["total"] else 0
+
 
     res = conn.execute("""
         SELECT SUM(s.amount * (p.fee_rate / 100.0)) as total
-        FROM sales s JOIN products p ON s.product_id = p.id
-        WHERE p.category = 'fee' AND strftime('%Y-%m', s.sale_date) = ?
+        FROM sales s
+        JOIN products p ON s.product_id = p.id
+        WHERE p.category = 'fee'
+        AND strftime('%Y-%m', s.sale_date) = ?
     """, (month,)).fetchone()
-    fee_income = int(res["total"] or 0)
+
+    fee_income = int(res["total"]) if res and res["total"] else 0
+
 
     res = conn.execute("""
         SELECT SUM(s.amount - (p.cost_price * s.quantity)) as profit
-        FROM sales s JOIN products p ON s.product_id = p.id
-        WHERE p.category = 'buy' AND strftime('%Y-%m', s.sale_date) = ?
+        FROM sales s
+        JOIN products p ON s.product_id = p.id
+        WHERE p.category = 'buy'
+        AND strftime('%Y-%m', s.sale_date) = ?
     """, (month,)).fetchone()
-    buy_profit = int(res["profit"] or 0)
 
-    settings = conn.execute("SELECT rental_income, expense FROM monthly_settings WHERE month = ?", (month,)).fetchone()
-    rental_income = int(settings["rental_income"]) if settings else 0
-    expense = int(settings["expense"]) if settings else 0
+    buy_profit = int(res["profit"]) if res and res["profit"] else 0
+
+
+    settings = conn.execute(
+        "SELECT rental_income, expense FROM monthly_settings WHERE month = ?",
+        (month,)
+    ).fetchone()
+
+    rental_income = 0
+    expense = 0
+
+    if settings:
+        if settings["rental_income"]:
+            rental_income = int(settings["rental_income"])
+
+        if settings["expense"]:
+            expense = int(settings["expense"])
+
 
     final_profit = fee_income + buy_profit + rental_income - expense
 
+
     low_stocks = conn.execute("""
-        SELECT p.name, (IFNULL(st.total_in, 0) - IFNULL(sa.total_out, 0)) as stock
+        SELECT p.name,
+        (IFNULL(st.total_in,0) - IFNULL(sa.total_out,0)) as stock
         FROM products p
-        LEFT JOIN (SELECT product_id, SUM(quantity) as total_in FROM stock_entries GROUP BY product_id) st ON p.id = st.product_id
-        LEFT JOIN (SELECT product_id, SUM(quantity) as total_out FROM sales GROUP BY product_id) sa ON p.id = sa.product_id
-        GROUP BY p.id HAVING stock <= 3
+        LEFT JOIN (
+            SELECT product_id, SUM(quantity) as total_in
+            FROM stock_entries GROUP BY product_id
+        ) st ON p.id = st.product_id
+        LEFT JOIN (
+            SELECT product_id, SUM(quantity) as total_out
+            FROM sales GROUP BY product_id
+        ) sa ON p.id = sa.product_id
+        GROUP BY p.id
+        HAVING stock <= 3
     """).fetchall()
 
+
     expiring = conn.execute("""
-        SELECT p.name, se.expiry_date FROM stock_entries se JOIN products p ON se.product_id = p.id
-        WHERE se.expiry_date IS NOT NULL AND se.expiry_date != '' ORDER BY se.expiry_date ASC LIMIT 5
+        SELECT p.name, se.expiry_date
+        FROM stock_entries se
+        JOIN products p ON se.product_id = p.id
+        WHERE se.expiry_date IS NOT NULL
+        AND se.expiry_date != ''
+        ORDER BY se.expiry_date ASC
+        LIMIT 5
     """).fetchall()
+
 
     conn.close()
 
-    return render_template("dashboard.html", **locals()) 
+
+    return render_template(
+        "dashboard.html",
+        month=month,
+        total_sales=total_sales,
+        today_total=today_total,
+        fee_income=fee_income,
+        buy_profit=buy_profit,
+        rental_income=rental_income,
+        expense=expense,
+        final_profit=final_profit,
+        low_stocks=low_stocks,
+        expiring=expiring
+    )
 
 @app.route("/monthly", methods=["GET", "POST"])
 def monthly():
