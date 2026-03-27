@@ -16,6 +16,10 @@ def get_db_connection():
 @app.route("/login", methods=["GET", "POST"])
 def login():
 
+    # すでにログイン済ならダッシュボードへ
+    if session.get("login"):
+        return redirect(url_for("dashboard"))
+
     if request.method == "POST":
 
         username = request.form.get("username")
@@ -34,20 +38,19 @@ def logout():
     return redirect(url_for("login"))
 
 
+# トップ
 @app.route("/")
 def index():
 
-    if not session.get("login"):
-        return redirect(url_for("login"))
+    if session.get("login"):
+        return redirect(url_for("dashboard"))
 
-    return redirect(url_for("dashboard"))
+    return redirect(url_for("login"))
 
 
+# ダッシュボード
 @app.route("/dashboard")
 def dashboard():
-
-    if not session.get("login"):
-        return redirect(url_for("login"))
 
     if not session.get("login"):
         return redirect(url_for("login"))
@@ -67,6 +70,7 @@ def dashboard():
     ).fetchone()
 
     total_sales = int(res["total"]) if res and res["total"] else 0
+
 
     res = conn.execute(
         "SELECT SUM(amount) as total FROM sales WHERE sale_date = ?",
