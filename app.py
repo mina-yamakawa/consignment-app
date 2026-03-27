@@ -5,6 +5,9 @@ from datetime import datetime
 app = Flask(__name__)
 app.secret_key = "itaku_SecretKey_Consignment2026"
 
+app.config["SESSION_COOKIE_SECURE"] = True
+app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
+
 def get_db_connection():
     conn = sqlite3.connect("database/database.db")
     conn.row_factory = sqlite3.Row 
