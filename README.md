@@ -146,6 +146,6 @@ SUM(stock_entries.quantity) - SUM(sales.quantity)
 
 ---
 
-## ■ ER図
+## ER図
 
-（ここに画像を貼る）
+![er](images/er.png)
