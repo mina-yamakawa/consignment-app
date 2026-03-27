@@ -34,13 +34,20 @@ def logout():
     return redirect(url_for("login"))
 
 
-# ダッシュボード
 @app.route("/")
 def index():
-    return redirect(url_for("login"))
+
+    if not session.get("login"):
+        return redirect(url_for("login"))
+
+    return redirect(url_for("dashboard"))
+
 
 @app.route("/dashboard")
 def dashboard():
+
+    if not session.get("login"):
+        return redirect(url_for("login"))
 
     if not session.get("login"):
         return redirect(url_for("login"))
