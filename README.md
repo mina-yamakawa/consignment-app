@@ -146,5 +146,15 @@ SUM(stock_entries.quantity) - SUM(sales.quantity)
 
 ---
 
+## 画面
+
+![dashboard1](images/dashboard1.png)
+![dashboard2](images/dashboard2.png)
+
 ## ER図
+
 ![er](images/er.png)
+
+## システム構成図
+
+![system](images/system.png)
