@@ -37,22 +37,22 @@ PASS: itaku2026
 
 ---
 
-## ■ 使用技術
+■ 使用技術
 
-### フロントエンド
+【フロントエンド】
 - HTML
 - CSS
 - JavaScript
 - Tailwind CSS
 
-### バックエンド
+【バックエンド】
 - Python
 - Flask
 
-### データベース
+【データベース】
 - SQLite
 
-### インフラ
+【インフラ】
 - AWS EC2 (Ubuntu)
 - nginx
 - Gunicorn
@@ -60,13 +60,9 @@ PASS: itaku2026
 - Let's Encrypt
 - 独自ドメイン
 
-### バージョン管理
+【バージョン管理】
 - Git
 - GitHub
-
-### 開発環境
-- Visual Studio Code
-- Google Chrome
 
 
 ---
@@ -158,3 +154,20 @@ SUM(stock_entries.quantity) - SUM(sales.quantity)
 ## システム構成図
 
 ![system](images/system.png)
+
+
+■ 工夫した点
+
+- 在庫を「入荷 − 売上」で自動計算する仕組みを実装
+- 委託販売と買取販売の両方に対応
+- 期限管理機能を実装し、食品管理にも対応
+- AWS EC2上にデプロイし、独自ドメインおよびHTTPS対応を実施
+
+
+■ 苦労した点
+
+- DNS設定とHTTPS化（SSL証明書の設定）でエラーが発生し解決に時間がかかった
+- 在庫計算のSQL設計でデータ整合性を保つ工夫が必要だった
+- セッション管理によるログイン制御の実装
+
+
